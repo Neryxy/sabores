@@ -58,7 +58,7 @@ namespace Restaurante.Controllers
 
             Console.WriteLine("=================================");
 
-            return View(mesas);
+            return Content("TESTE MESA CONTROLLER NOVO");
         }
 
         // =========================
