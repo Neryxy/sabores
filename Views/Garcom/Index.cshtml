@@ -1,0 +1,50 @@
+@model List<SaboresDeMiTierra.Models.Usuario>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex gap-2 align-items-center">
+            <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary btn-sm">⬅ Início</a>
+            <h2 class="mb-0">👨‍🍳 Garçons</h2>
+        </div>
+
+        <a asp-action="Criar" class="btn btn-success btn-sm">+ Novo Garçom</a>
+    </div>
+
+    @if (TempData["Sucesso"] != null)
+    {
+        <div class="alert alert-success">@TempData["Sucesso"]</div>
+    }
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <table class="table table-striped mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Nome</th>
+                        <th>Login</th>
+                        <th>Cargo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="3" class="text-center text-muted py-4">Nenhum garçom cadastrado.</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        foreach (var usuario in Model)
+                        {
+                            <tr>
+                                <td>@usuario.Nome</td>
+                                <td>@usuario.Login</td>
+                                <td><span class="badge bg-primary">@usuario.Cargo</span></td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

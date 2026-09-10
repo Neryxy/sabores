@@ -1,0 +1,187 @@
+﻿@model List<Restaurante.Models.Mesa>
+
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+
+        <div class="d-flex gap-2 align-items-center">
+
+            <a asp-controller="Home"
+               asp-action="Index"
+               class="btn btn-outline-secondary btn-sm">
+                ⬅ Início
+            </a>
+
+            <h2 class="mb-0">🪑 Mesas</h2>
+
+        </div>
+
+        <div class="d-flex gap-2">
+
+            @if (string.Equals(Context.Session.GetString("UsuarioCargo"), "Admin", StringComparison.OrdinalIgnoreCase) ||
+                 string.Equals(Context.Session.GetString("UsuarioCargo"), "Administrador", StringComparison.OrdinalIgnoreCase))
+            {
+                <a class="btn btn-dark btn-sm" href="/Mesa/Create">
+                    + Nova Mesa
+                </a>
+            }
+
+        </div>
+
+    </div>
+
+    @foreach (var grupo in Model.GroupBy(m => m.Nome ?? "Sem local").OrderBy(g => g.Key))
+    {
+        <h4 class="mt-4 mb-3">📍 @grupo.Key</h4>
+
+        <div class="row">
+
+            @foreach (var mesa in grupo)
+            {
+                var status = mesa.Status?.ToLower() ?? "livre";
+
+                string cor = "secondary";
+                string texto = "Livre";
+
+                if (status == "ocupada")
+                {
+                    cor = "danger";
+                    texto = "Ocupada";
+                }
+                else if (status == "reservada")
+                {
+                    cor = "warning";
+                    texto = "Reservada";
+                }
+                else if (status == "livre")
+                {
+                    cor = "success";
+                    texto = "Livre";
+                }
+
+                <div class="col-md-3 mb-3">
+
+                    <div class="card border-@cor shadow-sm">
+
+                        <div class="card-body text-center">
+
+                            <h5 class="mb-1">Mesa @mesa.Numero</h5>
+
+                            @if (!string.IsNullOrEmpty(mesa.Nome))
+                            {
+                                <small class="text-muted d-block mb-2">
+                                    @mesa.Nome
+                                </small>
+                            }
+
+                            <span class="badge bg-@cor mb-3">@texto</span>
+
+                            <div class="d-grid gap-2">
+
+                                @* =========================
+                                   LIVRE
+                                   ========================= *@
+                                @if (status == "livre")
+                                {
+                                    <a asp-controller="Mesa"
+                                       asp-action="Reservar"
+                                       asp-route-id="@mesa.Id"
+                                       class="btn btn-warning btn-sm">
+                                        Reservar
+                                    </a>
+
+                                    <a asp-controller="Pedido"
+                                       asp-action="Abrir"
+                                       asp-route-mesaId="@mesa.Id"
+                                       class="btn btn-success btn-sm">
+                                        Abrir Pedido
+                                    </a>
+                                }
+
+                                @* =========================
+                                   OCUPADA
+                                   ========================= *@
+                                else if (status == "ocupada")
+                                {
+                                    <a asp-controller="Pedido"
+                                       asp-action="Detalhes"
+                                       asp-route-mesaId="@mesa.Id"
+                                       class="btn btn-primary btn-sm">
+                                        Ver Pedido
+                                    </a>
+
+                                    <!-- 🔥 LIBERAR MESA VOLTOU AQUI -->
+                                    <form asp-controller="Mesa"
+                                          asp-action="Liberar"
+                                          method="post">
+
+                                        <input type="hidden" name="mesaId" value="@mesa.Id" />
+
+                                        <button class="btn btn-warning btn-sm w-100 mt-1">
+                                            Liberar Mesa
+                                        </button>
+
+                                    </form>
+                                }
+
+                                @* =========================
+                                   RESERVADA
+                                   ========================= *@
+                                else if (status == "reservada")
+                                {
+                                    <a asp-controller="Pedido"
+                                       asp-action="Abrir"
+                                       asp-route-mesaId="@mesa.Id"
+                                       class="btn btn-success btn-sm">
+                                        Abrir Pedido
+                                    </a>
+
+                                    <form asp-controller="Mesa"
+                                          asp-action="Liberar"
+                                          method="post">
+
+                                        <input type="hidden" name="mesaId" value="@mesa.Id" />
+
+                                        <button class="btn btn-secondary btn-sm w-100 mt-1">
+                                            Cancelar Reserva
+                                        </button>
+
+                                    </form>
+                                }
+
+                            </div>
+
+                            @if (string.Equals(Context.Session.GetString("UsuarioCargo"), "Admin", StringComparison.OrdinalIgnoreCase) ||
+                                 string.Equals(Context.Session.GetString("UsuarioCargo"), "Administrador", StringComparison.OrdinalIgnoreCase))
+                            {
+                                <hr class="my-2" />
+
+                                <div class="d-flex gap-1 justify-content-center">
+                                    <a asp-controller="Mesa"
+                                       asp-action="Edit"
+                                       asp-route-id="@mesa.Id"
+                                       class="btn btn-primary btn-sm">
+                                        Editar
+                                    </a>
+
+                                    <a asp-controller="Mesa"
+                                       asp-action="Delete"
+                                       asp-route-id="@mesa.Id"
+                                       class="btn btn-danger btn-sm"
+                                       onclick="return confirm('Excluir mesa?')">
+                                        Excluir
+                                    </a>
+                                </div>
+                            }
+
+                        </div>
+
+                    </div>
+
+                </div>
+            }
+
+        </div>
+    }
+
+</div>

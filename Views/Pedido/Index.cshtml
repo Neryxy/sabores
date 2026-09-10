@@ -1,0 +1,108 @@
+﻿@model List<dynamic>
+
+<div class="container mt-4">
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+
+        <div class="d-flex gap-2 align-items-center">
+
+            <a asp-controller="Home"
+               asp-action="Index"
+               class="btn btn-outline-secondary btn-sm">
+                ⬅ Início
+            </a>
+
+            <h2 class="mb-0">🧾 Pedidos Abertos</h2>
+
+        </div>
+
+        <div class="d-flex gap-2">
+
+            <a asp-controller="Pedido"
+               asp-action="Historico"
+               class="btn btn-secondary btn-sm">
+                📜 Histórico
+            </a>
+
+        </div>
+
+    </div>
+
+    <!-- TABELA -->
+    <div class="table-responsive">
+
+        <table class="table table-striped shadow-sm align-middle">
+
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Mesa</th>
+                    <th>Status</th>
+                    <th>Ação</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                @if (Model != null && Model.Count > 0)
+                {
+                    foreach (var p in Model)
+                    {
+                        <tr>
+
+                            <!-- ID -->
+                            <td>@p.Id</td>
+
+                            <!-- MESA -->
+                            <td>
+                                <span class="badge bg-primary">
+                                    Mesa @p.MesaNumero
+                                </span>
+
+                                @if (!string.IsNullOrEmpty(p.MesaNome))
+                                {
+                                    <small class="text-muted ms-1">
+                                        (@p.MesaNome)
+                                    </small>
+                                }
+                            </td>
+
+                            <!-- STATUS -->
+                            <td>
+                                <span class="badge bg-success">
+                                    Aberto
+                                </span>
+                            </td>
+
+                            <!-- AÇÃO -->
+                            <td>
+
+                                <a asp-controller="Pedido"
+                                   asp-action="Detalhes"
+                                   asp-route-mesaId="@p.MesaId"
+                                   class="btn btn-primary btn-sm">
+                                    Abrir
+                                </a>
+
+                            </td>
+
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="4" class="text-center text-muted py-4">
+                            Nenhum pedido aberto no momento
+                        </td>
+                    </tr>
+                }
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>

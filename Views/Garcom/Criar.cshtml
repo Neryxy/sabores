@@ -1,0 +1,37 @@
+<div class="container mt-4" style="max-width: 600px;">
+    <div class="d-flex gap-2 align-items-center mb-3">
+        <a asp-action="Index" class="btn btn-outline-secondary btn-sm">⬅ Voltar</a>
+        <h2 class="mb-0">👨‍🍳 Novo Garçom</h2>
+    </div>
+
+    @if (ViewBag.Erro != null)
+    {
+        <div class="alert alert-danger">@ViewBag.Erro</div>
+    }
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form asp-action="Criar" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="mb-3">
+                    <label class="form-label">Nome</label>
+                    <input name="nome" class="form-control" maxlength="100" required />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Login</label>
+                    <input name="login" class="form-control" maxlength="50" required />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Senha</label>
+                    <input name="senha" type="password" class="form-control" minlength="6" required />
+                </div>
+
+                <button type="submit" class="btn btn-success">Criar Garçom</button>
+                <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+            </form>
+        </div>
+    </div>
+</div>

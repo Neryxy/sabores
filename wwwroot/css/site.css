@@ -1,0 +1,408 @@
+html {
+    font-size: 14px;
+}
+
+@media (min-width: 768px) {
+    html {
+        font-size: 16px;
+    }
+}
+
+html {
+    position: relative;
+    min-height: 100%;
+}
+
+/* =========================
+   🌶 TEMA VIVO - RESTAURANTE BOLIVIANO
+========================= */
+
+:root {
+    --bg: #fff7ed;
+    --verde: #16a34a;
+    --verde-escuro: #15803d;
+    --vermelho: #dc2626;
+    --vermelho-escuro: #b91c1c;
+    --amarelo: #fbbf24;
+    --amarelo-escuro: #f59e0b;
+    --marrom: #7c4a2d;
+    --texto: #1f1f1f;
+}
+
+/* fundo */
+body {
+    margin-bottom: 60px;
+    background: var(--bg);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--texto);
+}
+
+/* =========================
+   TITULOS
+========================= */
+
+h2 {
+    font-weight: 900;
+    color: var(--vermelho);
+}
+
+h4, h5 {
+    font-weight: 700;
+    color: var(--marrom);
+}
+
+/* =========================
+   BOTÕES
+========================= */
+
+.btn {
+    border-radius: 10px !important;
+    font-weight: 700;
+    transition: 0.2s ease;
+}
+
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+
+/* primário (verde vivo) */
+.btn-primary {
+    background: var(--verde);
+    border: none;
+}
+
+    .btn-primary:hover {
+        background: var(--verde-escuro);
+    }
+
+/* sucesso */
+.btn-success {
+    background: #22c55e;
+    border: none;
+}
+
+    .btn-success:hover {
+        background: var(--verde-escuro);
+    }
+
+/* warning (milho forte) */
+.btn-warning {
+    background: var(--amarelo);
+    border: none;
+    color: #1a1a1a;
+}
+
+    .btn-warning:hover {
+        background: var(--amarelo-escuro);
+    }
+
+/* danger (pimenta forte) */
+.btn-danger {
+    background: var(--vermelho);
+    border: none;
+}
+
+    .btn-danger:hover {
+        background: var(--vermelho-escuro);
+    }
+
+/* dark */
+.btn-dark {
+    background: #2a2a2a;
+}
+
+/* =========================
+   CARDS
+========================= */
+
+.card {
+    border-radius: 14px;
+    border: 1px solid #f3e2d2;
+    background: #ffffff;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    transition: 0.2s ease;
+}
+
+    .card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    }
+
+/* =========================
+   BADGES
+========================= */
+
+.badge {
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-weight: 700;
+}
+
+    /* status mesas */
+    .badge.bg-success {
+        background: var(--verde) !important;
+    }
+
+    .badge.bg-danger {
+        background: var(--vermelho) !important;
+    }
+
+    .badge.bg-warning {
+        background: var(--amarelo) !important;
+        color: #1a1a1a !important;
+    }
+
+/* =========================
+   TABELAS
+========================= */
+
+.table {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+}
+
+    .table thead {
+        background: var(--vermelho) !important;
+        color: white;
+    }
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: #fff1e6;
+}
+
+/* =========================
+   LINKS
+========================= */
+
+a {
+    text-decoration: none;
+}
+
+/* =========================
+   CONTAINER
+========================= */
+
+.container {
+    padding-top: 10px;
+}
+
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+/* =========================
+   🌶 TEMA VIVO - RESTAURANTE BOLIVIANO
+========================= */
+
+:root {
+  --bg: #fff7ed;
+
+  --verde: #16a34a;
+  --verde-escuro: #15803d;
+
+  --vermelho: #dc2626;
+  --vermelho-escuro: #b91c1c;
+
+  --amarelo: #fbbf24;
+  --amarelo-escuro: #f59e0b;
+
+  --marrom: #7c4a2d;
+
+  --texto: #1f1f1f;
+}
+
+/* fundo */
+body {
+  margin-bottom: 60px;
+  background: var(--bg);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--texto);
+}
+
+/* =========================
+   TITULOS
+========================= */
+
+h2 {
+  font-weight: 900;
+  color: var(--vermelho);
+}
+
+h4, h5 {
+  font-weight: 700;
+  color: var(--marrom);
+}
+
+/* =========================
+   BOTÕES
+========================= */
+
+.btn {
+  border-radius: 10px !important;
+  font-weight: 700;
+  transition: 0.2s ease;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+}
+
+/* primário (verde vivo) */
+.btn-primary {
+  background: var(--verde);
+  border: none;
+}
+
+.btn-primary:hover {
+  background: var(--verde-escuro);
+}
+
+/* sucesso */
+.btn-success {
+  background: #22c55e;
+  border: none;
+}
+
+.btn-success:hover {
+  background: var(--verde-escuro);
+}
+
+/* warning (milho forte) */
+.btn-warning {
+  background: var(--amarelo);
+  border: none;
+  color: #1a1a1a;
+}
+
+.btn-warning:hover {
+  background: var(--amarelo-escuro);
+}
+
+/* danger (pimenta forte) */
+.btn-danger {
+  background: var(--vermelho);
+  border: none;
+}
+
+.btn-danger:hover {
+  background: var(--vermelho-escuro);
+}
+
+/* dark */
+.btn-dark {
+  background: #2a2a2a;
+}
+
+/* =========================
+   CARDS
+========================= */
+
+.card {
+  border-radius: 14px;
+  border: 1px solid #f3e2d2;
+  background: #ffffff;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  transition: 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+/* =========================
+   BADGES
+========================= */
+
+.badge {
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-weight: 700;
+}
+
+/* status mesas */
+.badge.bg-success {
+  background: var(--verde) !important;
+}
+
+.badge.bg-danger {
+  background: var(--vermelho) !important;
+}
+
+.badge.bg-warning {
+  background: var(--amarelo) !important;
+  color: #1a1a1a !important;
+}
+
+/* =========================
+   TABELAS
+========================= */
+
+.table {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+}
+
+.table thead {
+  background: var(--vermelho) !important;
+  color: white;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: #fff1e6;
+}
+
+/* =========================
+   LINKS
+========================= */
+
+a {
+  text-decoration: none;
+}
+
+/* =========================
+   CONTAINER
+========================= */
+
+.container {
+  padding-top: 10px;
+}
+
+/* =========================
+   NAVBAR RESTAURANTE
+========================= */
+
+.navbar {
+    background: linear-gradient(90deg, #dc2626, #fbbf24) !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+    .navbar a {
+        color: white !important;
+        font-weight: 600;
+    }
+
+        .navbar a:hover {
+            opacity: 0.85;
+        }
+
+/* brand (nome do restaurante) */
+.navbar-brand {
+    font-weight: 900;
+    color: white !important;
+}

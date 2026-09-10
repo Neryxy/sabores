@@ -1,0 +1,165 @@
+@model List<Restaurante.Models.Produto>
+
+<div class="container mt-4">
+
+    <div class="mb-3 d-flex justify-content-between">
+
+        <a asp-controller="Mesa"
+           asp-action="Index"
+           class="btn btn-secondary">
+            ← Voltar para Mesas
+        </a>
+
+        <form asp-action="ImprimirCozinha"
+              asp-controller="Pedido"
+              method="post">
+
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="mesaId" value="@ViewBag.MesaId" />
+
+            <button type="submit" class="btn btn-dark">
+                🖨️ Imprimir Cozinha
+            </button>
+        </form>
+
+    </div>
+
+    <h2>Pedido da Mesa @ViewBag.MesaId</h2>
+
+    @if (TempData["ErroImpressao"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErroImpressao"]</div>
+    }
+
+    @if (TempData["SucessoImpressao"] != null)
+    {
+        <div class="alert alert-success">@TempData["SucessoImpressao"]</div>
+    }
+
+    <hr />
+
+    @if (ViewBag.PedidoId == 0)
+    {
+        <div class="alert alert-danger">
+            Nenhum pedido aberto para essa mesa.
+        </div>
+    }
+    else
+    {
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Preço</th>
+                    <th>Ação</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var p in Model)
+                {
+                    <tr>
+                        <td>@p.Nome</td>
+                        <td>R$ @p.Preco.ToString("N2")</td>
+                        <td>
+
+                            <form asp-action="AdicionarItem"
+                                  asp-controller="Pedido"
+                                  method="post"
+                                  class="d-flex gap-2">
+
+                                <input type="hidden" name="mesaId" value="@ViewBag.MesaId" />
+                                <input type="hidden" name="pedidoId" value="@ViewBag.PedidoId" />
+                                <input type="hidden" name="produtoId" value="@p.Id" />
+
+                                <input type="number"
+                                       name="quantidade"
+                                       value="1"
+                                       min="1"
+                                       class="form-control form-control-sm" />
+
+                                <button class="btn btn-success btn-sm">+</button>
+
+                            </form>
+
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <hr />
+
+        <h4>Itens do Pedido</h4>
+
+        
+            var itens = ViewBag.Itens as List<Restaurante.Models.ItemPedido>;
+        
+
+        @if (itens != null && itens.Count > 0)
+        {
+            decimal total = 0;
+
+            <ul class="list-group">
+
+                @foreach (var item in itens)
+                {
+                    var subtotal = item.Quantidade * item.PrecoUnitario;
+                    total += subtotal;
+
+                    <li class="list-group-item d-flex justify-content-between">
+
+                        <div>
+                            <strong>@item.Nome</strong><br />
+                            <small>@item.Quantidade x R$ @item.PrecoUnitario.ToString("N2")</small>
+                        </div>
+
+                        <div>
+                            <strong>R$ @subtotal.ToString("N2")</strong>
+                        </div>
+
+                    </li>
+                }
+
+                <li class="list-group-item d-flex justify-content-between">
+                    <strong>Subtotal</strong>
+                    <strong>R$ @total.ToString("N2")</strong>
+                </li>
+
+                @{ decimal taxa = Math.Round(total * 0.10m, 2); }
+                <li class="list-group-item d-flex justify-content-between">
+                    <strong>Taxa (10%)</strong>
+                    <strong>R$ @taxa.ToString("N2")</strong>
+                </li>
+
+                <li class="list-group-item d-flex justify-content-between bg-light">
+                    <strong>Total Final</strong>
+                    <strong>R$ @((total + taxa).ToString("N2"))</strong>
+                </li>
+
+            </ul>
+
+            @* Garçom também pode fechar o pedido nesta tela. *@
+            <form asp-action="FecharPedido"
+                  asp-controller="Pedido"
+                  method="post"
+                  class="mt-3">
+
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="mesaId" value="@ViewBag.MesaId" />
+
+                <button type="submit" class="btn btn-danger w-100">
+                    Fechar Pedido
+                </button>
+
+            </form>
+        }
+        else
+        {
+            <div class="alert alert-info">
+                Nenhum item adicionado ainda.
+            </div>
+        }
+    }
+
+</div>

@@ -1,0 +1,63 @@
+﻿@model List<Restaurante.Models.PedidoHistoricoVM>
+
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+
+        <div class="d-flex gap-2 align-items-center">
+
+            <a asp-controller="Home"
+               asp-action="Index"
+               class="btn btn-outline-secondary btn-sm">
+                ⬅ Início
+            </a>
+
+            <h2 class="mb-0">📜 Histórico de Pedidos</h2>
+
+        </div>
+
+    </div>
+
+    <table class="table table-striped shadow-sm">
+
+        <thead class="table-dark">
+            <tr>
+                <th>Pedido</th>
+                <th>Mesa</th>
+                <th>Data</th>
+                <th>Subtotal</th>
+                <th>Taxa</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            @if (Model != null && Model.Count > 0)
+            {
+                foreach (var p in Model)
+                {
+                    <tr>
+                        <td>@p.Id</td>
+                        <td>@p.MesaId</td>
+                        <td>@p.Data.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>R$ @p.Subtotal.ToString("N2")</td>
+                        <td>R$ @p.Taxa.ToString("N2")</td>
+                        <td><strong>R$ @p.TotalFinal.ToString("N2")</strong></td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="6" class="text-center text-muted">
+                        Nenhum histórico encontrado
+                    </td>
+                </tr>
+            }
+
+        </tbody>
+
+    </table>
+
+</div>

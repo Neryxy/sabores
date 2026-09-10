@@ -1,0 +1,59 @@
+﻿<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+
+        <div class="d-flex gap-2 align-items-center">
+
+            <a asp-controller="Home"
+               asp-action="Index"
+               class="btn btn-outline-secondary btn-sm">
+                ⬅ Início
+            </a>
+
+            <h2 class="mb-0">📊 Dashboard</h2>
+
+        </div>
+
+    </div>
+
+    <!-- resto do seu dashboard abaixo -->
+
+
+    <div class="mb-3 d-flex gap-2">
+
+        <a asp-action="Dashboard" asp-route-periodo="hoje"
+           class="btn btn-sm @(ViewBag.Periodo == "hoje" ? "btn-primary" : "btn-outline-primary")">
+            Hoje
+        </a>
+
+        <a asp-action="Dashboard" asp-route-periodo="semana"
+           class="btn btn-sm @(ViewBag.Periodo == "semana" ? "btn-primary" : "btn-outline-primary")">
+            Semana
+        </a>
+
+        <a asp-action="Dashboard" asp-route-periodo="mes"
+           class="btn btn-sm @(ViewBag.Periodo == "mes" ? "btn-primary" : "btn-outline-primary")">
+            Mês
+        </a>
+
+    </div>
+
+    <div class="row">
+
+        <div class="col-md-6">
+            <div class="card p-3 shadow-sm">
+                <h5>💰 Total Vendas</h5>
+                <h3>R$ @ViewBag.TotalVendas.ToString("N2")</h3>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card p-3 shadow-sm">
+                <h5>🧾 Total Pedidos</h5>
+                <h3>@ViewBag.TotalPedidos</h3>
+            </div>
+        </div>
+
+    </div>
+
+</div>

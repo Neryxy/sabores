@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - SaboresDeMiTierra</title>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+
+<body>
+
+    <header>
+
+        <nav class="navbar navbar-expand-lg navbar-dark mb-3 shadow-sm">
+
+            <div class="container-fluid">
+
+                <!-- LOGO -->
+                <a class="navbar-brand fw-bold" asp-controller="Home" asp-action="Index">
+                     Sabores de Mi Tierra
+                </a>
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- MENU -->
+                <div class="collapse navbar-collapse" id="menu">
+
+                    <ul class="navbar-nav me-auto">
+
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Home" asp-action="Index">🏠 Home</a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Mesa" asp-action="Index">🪑 Mesas</a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Pedido" asp-action="Index">🧾 Pedidos</a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Produto" asp-action="Index">🍽 Cardápio</a>
+                        </li>
+
+                        @if (string.Equals(Context.Session.GetString("UsuarioCargo"), "Admin", StringComparison.OrdinalIgnoreCase) ||
+                             string.Equals(Context.Session.GetString("UsuarioCargo"), "Administrador", StringComparison.OrdinalIgnoreCase))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Pedido" asp-action="Historico">📊 Histórico</a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Pedido" asp-action="Dashboard">📈 Dashboard</a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Garcom" asp-action="Index">👨‍🍳 Garçons</a>
+                            </li>
+                        }
+
+                    </ul>
+
+                    @if (Context.Session.GetInt32("UsuarioId") != null)
+                    {
+                        <div class="d-flex align-items-center gap-3 text-white">
+                            <span>
+                                Olá, <strong>@Context.Session.GetString("UsuarioNome")</strong>
+                            </span>
+
+                            <form asp-controller="Login" asp-action="Sair" method="post" class="m-0">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-outline-light btn-sm">
+                                    Sair
+                                </button>
+                            </form>
+                        </div>
+                    }
+
+                </div>
+
+            </div>
+
+        </nav>
+
+    </header>
+
+    <!-- CONTEÚDO -->
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js"></script>
+
+</body>
+</html>

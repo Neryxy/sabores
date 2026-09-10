@@ -1,0 +1,81 @@
+@{
+    ViewData["Title"] = "Painel do Restaurante";
+    var cargo = Context.Session.GetString("UsuarioCargo");
+    var isAdmin = string.Equals(cargo, "Admin", StringComparison.OrdinalIgnoreCase) ||
+                  string.Equals(cargo, "Administrador", StringComparison.OrdinalIgnoreCase);
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>🍽️ Painel do Restaurante</h2>
+            <p class="text-muted mb-0">Olá, @Context.Session.GetString("UsuarioNome")!</p>
+        </div>
+        <span class="badge bg-dark fs-6">@cargo</span>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <h4>🪑 Mesas</h4>
+                    <p>Visualizar mesas, reservas e pedidos.</p>
+                    <a asp-controller="Mesa" asp-action="Index" class="btn btn-primary w-100">Acessar</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <h4>🧾 Pedidos</h4>
+                    <p>Ver pedidos em aberto e adicionar itens.</p>
+                    <a asp-controller="Pedido" asp-action="Index" class="btn btn-success w-100">Acessar</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <h4>🍽 Cardápio</h4>
+                    <p>Consultar os produtos disponíveis.</p>
+                    <a asp-controller="Produto" asp-action="Index" class="btn btn-warning w-100">Acessar</a>
+                </div>
+            </div>
+        </div>
+
+        @if (isAdmin)
+        {
+            <div class="col-md-4">
+                <div class="card shadow-sm h-100 border-dark">
+                    <div class="card-body text-center">
+                        <h4>📈 Dashboard</h4>
+                        <p>Resumo de vendas e pedidos.</p>
+                        <a asp-controller="Pedido" asp-action="Dashboard" class="btn btn-dark w-100">Ver estatísticas</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body text-center">
+                        <h4>📜 Histórico</h4>
+                        <p>Pedidos finalizados e vendas.</p>
+                        <a asp-controller="Pedido" asp-action="Historico" class="btn btn-secondary w-100">Abrir histórico</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card shadow-sm h-100 border-primary">
+                    <div class="card-body text-center">
+                        <h4>👨‍🍳 Garçons</h4>
+                        <p>Cadastrar e visualizar os garçons.</p>
+                        <a asp-controller="Garcom" asp-action="Index" class="btn btn-primary w-100">Gerenciar garçons</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

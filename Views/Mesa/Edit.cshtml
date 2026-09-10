@@ -1,0 +1,35 @@
+﻿@model Restaurante.Models.Mesa
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">✏️ Editar Mesa</h2>
+
+    <form asp-action="Edit" method="post">
+
+        <input type="hidden" asp-for="Id" />
+
+        <div class="mb-3">
+            <label>Número da Mesa</label>
+            <input asp-for="Numero" class="form-control" type="number" required />
+        </div>
+
+        <div class="mb-3">
+            <label>Nome</label>
+            <input asp-for="Nome" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label>Status</label>
+            <select asp-for="Status" class="form-control">
+                <option value="Livre">Livre</option>
+                <option value="Reservada">Reservada</option>
+                <option value="Ocupada">Ocupada</option>
+            </select>
+        </div>
+
+        <button class="btn btn-primary">Atualizar</button>
+        <a href="/Mesa" class="btn btn-secondary">Voltar</a>
+
+    </form>
+
+</div>
