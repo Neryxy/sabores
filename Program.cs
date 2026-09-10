@@ -23,16 +23,17 @@ if (!app.Environment.IsDevelopment())
 }
 
 //app.UseHttpsRedirection();
+
 app.UseRouting();
 
 app.UseSession();
 app.UseAuthorization();
 
-app.MapStaticAssets();
+// Arquivos estáticos de wwwroot
+app.UseStaticFiles();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Login}/{action=Index}/{id?}")
-    .WithStaticAssets();
+    pattern: "{controller=Login}/{action=Index}/{id?}");
 
 app.Run();
