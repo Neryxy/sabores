@@ -48,6 +48,16 @@ namespace Restaurante.Controllers
                 }
             }
 
+            Console.WriteLine("========== TESTE MESAS ==========");
+
+            foreach (var mesa in mesas)
+            {
+                Console.WriteLine(
+                    $"ID: {mesa.Id} | Numero: {mesa.Numero} | Nome: {mesa.Nome} | Local: {mesa.Local}");
+            }
+
+            Console.WriteLine("=================================");
+
             return View(mesas);
         }
 
