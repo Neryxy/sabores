@@ -28,9 +28,9 @@ namespace Restaurante.Controllers
                 conn.Open();
 
                 string sql = @"
-                    SELECT Id, Numero, Nome, Status
+                    SELECT Id, Numero, Nome, Status, Local
                     FROM Mesas
-                    ORDER BY Nome ASC, Numero ASC";
+                    ORDER BY Local ASC, Numero ASC";
 
                 using var cmd = new MySqlCommand(sql, conn);
                 using var reader = cmd.ExecuteReader();
@@ -42,7 +42,8 @@ namespace Restaurante.Controllers
                         Id = Convert.ToInt32(reader["Id"]),
                         Numero = Convert.ToInt32(reader["Numero"]),
                         Nome = reader["Nome"]?.ToString(),
-                        Status = reader["Status"]?.ToString() ?? "Livre"
+                        Status = reader["Status"]?.ToString() ?? "Livre",
+                        Local = reader["Local"]?.ToString() ?? "Dentro"
                     });
                 }
             }
@@ -73,6 +74,7 @@ namespace Restaurante.Controllers
                 cmd.Parameters.AddWithValue("@MesaId", mesaId);
 
                 using var reader = cmd.ExecuteReader();
+
                 while (reader.Read())
                 {
                     pedidos.Add(Convert.ToInt32(reader["Id"]));
@@ -106,7 +108,7 @@ namespace Restaurante.Controllers
         }
 
         // =========================
-        // CREATE
+        // CREATE - TELA
         // =========================
         [HttpGet]
         [AdminOnly]
@@ -115,6 +117,9 @@ namespace Restaurante.Controllers
             return View();
         }
 
+        // =========================
+        // CREATE - SALVAR
+        // =========================
         [HttpPost]
         [AdminOnly]
         public IActionResult Create(Mesa mesa)
@@ -124,15 +129,48 @@ namespace Restaurante.Controllers
             using var conn = new MySqlConnection(conexao);
             conn.Open();
 
+            string local = string.IsNullOrWhiteSpace(mesa.Local)
+                ? "Dentro"
+                : mesa.Local;
+
+            // =========================
+            // DESCOBRIR PRÓXIMO NÚMERO
+            // =========================
+            string sqlNumero = @"
+                SELECT COALESCE(MAX(Numero), 0) + 1
+                FROM Mesas
+                WHERE Local = @Local";
+
+            int proximoNumero;
+
+            using (var cmdNumero = new MySqlCommand(sqlNumero, conn))
+            {
+                cmdNumero.Parameters.AddWithValue("@Local", local);
+
+                proximoNumero = Convert.ToInt32(
+                    cmdNumero.ExecuteScalar());
+            }
+
+            // =========================
+            // GERAR NOME AUTOMÁTICO
+            // =========================
+            string nome = $"Mesa {proximoNumero}";
+
+            // =========================
+            // INSERIR MESA
+            // =========================
             string sql = @"
-                INSERT INTO Mesas (Numero, Nome, Status)
-                VALUES (@Numero, @Nome, @Status)";
+                INSERT INTO Mesas
+                    (Numero, Nome, Status, Local)
+                VALUES
+                    (@Numero, @Nome, @Status, @Local)";
 
             using var cmd = new MySqlCommand(sql, conn);
 
-            cmd.Parameters.AddWithValue("@Numero", mesa.Numero);
-            cmd.Parameters.AddWithValue("@Nome", mesa.Nome ?? "");
-            cmd.Parameters.AddWithValue("@Status", mesa.Status ?? "Livre");
+            cmd.Parameters.AddWithValue("@Numero", proximoNumero);
+            cmd.Parameters.AddWithValue("@Nome", nome);
+            cmd.Parameters.AddWithValue("@Status", "Livre");
+            cmd.Parameters.AddWithValue("@Local", local);
 
             cmd.ExecuteNonQuery();
 
@@ -140,7 +178,7 @@ namespace Restaurante.Controllers
         }
 
         // =========================
-        // EDIT (GET)
+        // EDIT - TELA
         // =========================
         [HttpGet]
         [AdminOnly]
@@ -153,9 +191,13 @@ namespace Restaurante.Controllers
             using var conn = new MySqlConnection(conexao);
             conn.Open();
 
-            string sql = "SELECT Id, Numero, Nome, Status FROM Mesas WHERE Id = @Id";
+            string sql = @"
+                SELECT Id, Numero, Nome, Status, Local
+                FROM Mesas
+                WHERE Id = @Id";
 
             using var cmd = new MySqlCommand(sql, conn);
+
             cmd.Parameters.AddWithValue("@Id", id);
 
             using var reader = cmd.ExecuteReader();
@@ -166,13 +208,14 @@ namespace Restaurante.Controllers
                 mesa.Numero = Convert.ToInt32(reader["Numero"]);
                 mesa.Nome = reader["Nome"]?.ToString();
                 mesa.Status = reader["Status"]?.ToString() ?? "Livre";
+                mesa.Local = reader["Local"]?.ToString() ?? "Dentro";
             }
 
             return View(mesa);
         }
 
         // =========================
-        // EDIT (POST)
+        // EDIT - SALVAR
         // =========================
         [HttpPost]
         [AdminOnly]
@@ -183,11 +226,16 @@ namespace Restaurante.Controllers
             using var conn = new MySqlConnection(conexao);
             conn.Open();
 
+            string local = string.IsNullOrWhiteSpace(mesa.Local)
+                ? "Dentro"
+                : mesa.Local;
+
             string sql = @"
                 UPDATE Mesas
                 SET Numero = @Numero,
                     Nome = @Nome,
-                    Status = @Status
+                    Status = @Status,
+                    Local = @Local
                 WHERE Id = @Id";
 
             using var cmd = new MySqlCommand(sql, conn);
@@ -196,6 +244,7 @@ namespace Restaurante.Controllers
             cmd.Parameters.AddWithValue("@Numero", mesa.Numero);
             cmd.Parameters.AddWithValue("@Nome", mesa.Nome ?? "");
             cmd.Parameters.AddWithValue("@Status", mesa.Status ?? "Livre");
+            cmd.Parameters.AddWithValue("@Local", local);
 
             cmd.ExecuteNonQuery();
 
@@ -222,6 +271,7 @@ namespace Restaurante.Controllers
                 cmdCheck.Parameters.AddWithValue("@Id", id);
 
                 var result = cmdCheck.ExecuteScalar();
+
                 if (result != null)
                     status = result.ToString()!;
             }
@@ -232,8 +282,12 @@ namespace Restaurante.Controllers
                 return RedirectToAction("Index");
             }
 
-            using var cmd = new MySqlCommand("DELETE FROM Mesas WHERE Id = @Id", conn);
+            using var cmd = new MySqlCommand(
+                "DELETE FROM Mesas WHERE Id = @Id",
+                conn);
+
             cmd.Parameters.AddWithValue("@Id", id);
+
             cmd.ExecuteNonQuery();
 
             return RedirectToAction("Index");
@@ -249,9 +303,13 @@ namespace Restaurante.Controllers
             using var conn = new MySqlConnection(conexao);
             conn.Open();
 
-            string sql = "UPDATE Mesas SET Status = 'Reservada' WHERE Id = @Id";
+            string sql = @"
+                UPDATE Mesas
+                SET Status = 'Reservada'
+                WHERE Id = @Id";
 
             using var cmd = new MySqlCommand(sql, conn);
+
             cmd.Parameters.AddWithValue("@Id", id);
 
             cmd.ExecuteNonQuery();
