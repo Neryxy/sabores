@@ -2,6 +2,7 @@
 
 <div class="container mt-4">
 
+    ```
     <div class="d-flex justify-content-between align-items-center mb-3">
 
         <div class="d-flex gap-2 align-items-center">
@@ -31,14 +32,14 @@
     </div>
 
     @* =========================
-       MESAS SEPARADAS POR LOCAL
-       ========================= *@
+   MESAS SEPARADAS POR LOCAL
+   ========================= *@
     @foreach (var grupo in Model
         .GroupBy(m => m.Local ?? "Dentro")
         .OrderBy(g => g.Key == "Dentro" ? 0 : 1))
     {
         <h4 class="mt-4 mb-3">
-            🔥 TESTE NOVA VIEW: @grupo.Key
+            📍 LOCAL: @grupo.Key
         </h4>
 
         <div class="row">
@@ -86,8 +87,8 @@
                             <div class="d-grid gap-2">
 
                                 @* =========================
-                                   LIVRE
-                                   ========================= *@
+                               LIVRE
+                               ========================= *@
                                 @if (status == "livre")
                                 {
                                     <a asp-controller="Mesa"
@@ -106,8 +107,8 @@
                                 }
 
                                 @* =========================
-                                   OCUPADA
-                                   ========================= *@
+                               OCUPADA
+                               ========================= *@
                                 else if (status == "ocupada")
                                 {
                                     <a asp-controller="Pedido"
@@ -133,8 +134,8 @@
                                 }
 
                                 @* =========================
-                                   RESERVADA
-                                   ========================= *@
+                               RESERVADA
+                               ========================= *@
                                 else if (status == "reservada")
                                 {
                                     <a asp-controller="Pedido"
@@ -195,5 +196,6 @@
 
         </div>
     }
+    ```
 
 </div>
