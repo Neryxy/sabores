@@ -4,7 +4,6 @@ using Restaurante.Models;
 using Restaurante.Services;
 using SaboresDeMiTierra.Filters;
 
-
 namespace Restaurante.Controllers
 {
     public class PedidoController : Controller
@@ -55,7 +54,7 @@ namespace Restaurante.Controllers
         }
 
         // =====================
-        // ABRIR PEDIDO (CORRIGIDO)
+        // ABRIR PEDIDO
         // =====================
         [HttpGet]
         public IActionResult Abrir(int mesaId)
@@ -67,13 +66,14 @@ namespace Restaurante.Controllers
 
             int pedidoId = 0;
 
-            // 🔥 pega ou cria pedido aberto
             using (var cmd = new MySqlCommand(@"
-                SELECT Id FROM Pedidos 
+                SELECT Id
+                FROM Pedidos
                 WHERE MesaId=@MesaId AND Status='Aberto'
                 LIMIT 1", conn))
             {
                 cmd.Parameters.AddWithValue("@MesaId", mesaId);
+
                 var result = cmd.ExecuteScalar();
 
                 if (result != null)
@@ -92,7 +92,6 @@ namespace Restaurante.Controllers
                 pedidoId = Convert.ToInt32(cmd.ExecuteScalar());
             }
 
-            // mesa ocupada
             using (var cmdMesa = new MySqlCommand(
                 "UPDATE Mesas SET Status='Ocupada' WHERE Id=@MesaId", conn))
             {
@@ -104,28 +103,50 @@ namespace Restaurante.Controllers
         }
 
         // =====================
-        // DETALHES (igual teu)
+        // DETALHES
         // =====================
         public IActionResult Detalhes(int mesaId)
         {
             string conexao = _configuration.GetConnectionString("DefaultConnection")!;
 
             int pedidoId = 0;
+            int numeroMesa = 0;
+
             var produtos = new List<Produto>();
             var itens = new List<ItemPedido>();
 
             using var conn = new MySqlConnection(conexao);
             conn.Open();
 
+            // Pega o número REAL da mesa.
+            // MesaId é o Id interno do banco.
+            using (var cmd = new MySqlCommand(@"
+                SELECT Numero
+                FROM Mesas
+                WHERE Id=@MesaId
+                LIMIT 1", conn))
+            {
+                cmd.Parameters.AddWithValue("@MesaId", mesaId);
+
+                var result = cmd.ExecuteScalar();
+
+                if (result != null)
+                    numeroMesa = Convert.ToInt32(result);
+            }
+
+            // Busca o pedido aberto.
             using (var cmd = new MySqlCommand(
                 "SELECT Id FROM Pedidos WHERE MesaId=@MesaId AND Status='Aberto' LIMIT 1", conn))
             {
                 cmd.Parameters.AddWithValue("@MesaId", mesaId);
+
                 var result = cmd.ExecuteScalar();
+
                 if (result != null)
                     pedidoId = Convert.ToInt32(result);
             }
 
+            // Produtos ativos.
             using (var cmd = new MySqlCommand(
                 "SELECT * FROM Produtos WHERE Ativo = 1", conn))
             using (var reader = cmd.ExecuteReader())
@@ -142,12 +163,18 @@ namespace Restaurante.Controllers
                 }
             }
 
+            // Itens do pedido.
             using (var cmd = new MySqlCommand(@"
-                SELECT ip.Id, p.Nome, ip.Quantidade, ip.QuantidadeImpressa, ip.PrecoUnitario
+                SELECT ip.Id,
+                       p.Nome,
+                       ip.Quantidade,
+                       ip.QuantidadeImpressa,
+                       ip.PrecoUnitario
                 FROM ItensPedido ip
                 INNER JOIN Produtos p ON p.Id = ip.ProdutoId
                 INNER JOIN Pedidos ped ON ped.Id = ip.PedidoId
-                WHERE ped.MesaId=@MesaId AND ped.Status='Aberto'", conn))
+                WHERE ped.MesaId=@MesaId
+                  AND ped.Status='Aberto'", conn))
             {
                 cmd.Parameters.AddWithValue("@MesaId", mesaId);
 
@@ -168,7 +195,12 @@ namespace Restaurante.Controllers
 
             decimal subtotal = itens.Sum(i => i.Quantidade * i.PrecoUnitario);
 
+            // MesaId continua sendo o Id interno.
             ViewBag.MesaId = mesaId;
+
+            // NumeroMesa é o número que será mostrado para o usuário.
+            ViewBag.NumeroMesa = numeroMesa;
+
             ViewBag.PedidoId = pedidoId;
             ViewBag.Itens = itens;
             ViewBag.Total = subtotal;
@@ -179,7 +211,7 @@ namespace Restaurante.Controllers
         }
 
         // =====================
-        // ADICIONAR ITEM (CORRIGIDO)
+        // ADICIONAR ITEM
         // =====================
         [HttpPost]
         public IActionResult AdicionarItem(int pedidoId, int produtoId, int quantidade, int mesaId)
@@ -195,7 +227,9 @@ namespace Restaurante.Controllers
                 "SELECT Preco FROM Produtos WHERE Id=@Id", conn))
             {
                 cmd.Parameters.AddWithValue("@Id", produtoId);
+
                 var result = cmd.ExecuteScalar();
+
                 if (result != null)
                     preco = Convert.ToDecimal(result);
             }
@@ -212,6 +246,7 @@ namespace Restaurante.Controllers
                 cmd.Parameters.AddWithValue("@ProdutoId", produtoId);
 
                 using var reader = cmd.ExecuteReader();
+
                 if (reader.Read())
                 {
                     itemId = Convert.ToInt32(reader["Id"]);
@@ -234,8 +269,24 @@ namespace Restaurante.Controllers
             else
             {
                 using var cmd = new MySqlCommand(@"
-                    INSERT INTO ItensPedido (PedidoId, ProdutoId, Quantidade, QuantidadeImpressa, Impresso, PrecoUnitario)
-                    VALUES (@PedidoId, @ProdutoId, @Quantidade, 0, 0, @Preco)", conn);
+                    INSERT INTO ItensPedido
+                    (
+                        PedidoId,
+                        ProdutoId,
+                        Quantidade,
+                        QuantidadeImpressa,
+                        Impresso,
+                        PrecoUnitario
+                    )
+                    VALUES
+                    (
+                        @PedidoId,
+                        @ProdutoId,
+                        @Quantidade,
+                        0,
+                        0,
+                        @Preco
+                    )", conn);
 
                 cmd.Parameters.AddWithValue("@PedidoId", pedidoId);
                 cmd.Parameters.AddWithValue("@ProdutoId", produtoId);
@@ -245,13 +296,14 @@ namespace Restaurante.Controllers
                 cmd.ExecuteNonQuery();
             }
 
-            // Mantém Subtotal, Taxa (10%) e TotalFinal atualizados no banco.
+            // Mantém Subtotal, Taxa (10%) e TotalFinal atualizados.
             using (var cmd = new MySqlCommand(@"
                 SELECT COALESCE(SUM(Quantidade * PrecoUnitario), 0)
                 FROM ItensPedido
                 WHERE PedidoId=@PedidoId", conn))
             {
                 cmd.Parameters.AddWithValue("@PedidoId", pedidoId);
+
                 decimal subtotal = Convert.ToDecimal(cmd.ExecuteScalar());
                 decimal taxa = Math.Round(subtotal * 0.10m, 2);
                 decimal totalFinal = subtotal + taxa;
@@ -267,6 +319,7 @@ namespace Restaurante.Controllers
                 atualizar.Parameters.AddWithValue("@Taxa", taxa);
                 atualizar.Parameters.AddWithValue("@TotalFinal", totalFinal);
                 atualizar.Parameters.AddWithValue("@PedidoId", pedidoId);
+
                 atualizar.ExecuteNonQuery();
             }
 
@@ -288,15 +341,14 @@ namespace Restaurante.Controllers
             int pedidoId = 0;
             int quantidadeAtual = 0;
 
-            // Busca o item e confirma que pertence a um pedido aberto da mesa.
             using (var cmd = new MySqlCommand(@"
-        SELECT ip.PedidoId, ip.Quantidade
-        FROM ItensPedido ip
-        INNER JOIN Pedidos p ON p.Id = ip.PedidoId
-        WHERE ip.Id = @ItemId
-          AND p.MesaId = @MesaId
-          AND p.Status = 'Aberto'
-        LIMIT 1", conn))
+                SELECT ip.PedidoId, ip.Quantidade
+                FROM ItensPedido ip
+                INNER JOIN Pedidos p ON p.Id = ip.PedidoId
+                WHERE ip.Id = @ItemId
+                  AND p.MesaId = @MesaId
+                  AND p.Status = 'Aberto'
+                LIMIT 1", conn))
             {
                 cmd.Parameters.AddWithValue("@ItemId", itemId);
                 cmd.Parameters.AddWithValue("@MesaId", mesaId);
@@ -313,13 +365,13 @@ namespace Restaurante.Controllers
             if (pedidoId == 0)
                 return RedirectToAction("Detalhes", new { mesaId });
 
-            // Diminui somente a quantidade do pedido.
+            // Diminui SOMENTE a quantidade.
             if (quantidadeAtual > 1)
             {
                 using var cmd = new MySqlCommand(@"
-            UPDATE ItensPedido
-            SET Quantidade = Quantidade - 1
-            WHERE Id = @ItemId", conn);
+                    UPDATE ItensPedido
+                    SET Quantidade = Quantidade - 1
+                    WHERE Id = @ItemId", conn);
 
                 cmd.Parameters.AddWithValue("@ItemId", itemId);
 
@@ -327,10 +379,10 @@ namespace Restaurante.Controllers
             }
             else
             {
-                // Se tinha apenas 1 unidade, remove o item.
+                // Se chegou a zero, remove o item.
                 using var cmd = new MySqlCommand(@"
-            DELETE FROM ItensPedido
-            WHERE Id = @ItemId", conn);
+                    DELETE FROM ItensPedido
+                    WHERE Id = @ItemId", conn);
 
                 cmd.Parameters.AddWithValue("@ItemId", itemId);
 
@@ -339,9 +391,9 @@ namespace Restaurante.Controllers
 
             // Recalcula subtotal, taxa e total final.
             using (var cmd = new MySqlCommand(@"
-        SELECT COALESCE(SUM(Quantidade * PrecoUnitario), 0)
-        FROM ItensPedido
-        WHERE PedidoId = @PedidoId", conn))
+                SELECT COALESCE(SUM(Quantidade * PrecoUnitario), 0)
+                FROM ItensPedido
+                WHERE PedidoId = @PedidoId", conn))
             {
                 cmd.Parameters.AddWithValue("@PedidoId", pedidoId);
 
@@ -350,11 +402,11 @@ namespace Restaurante.Controllers
                 decimal totalFinal = subtotal + taxa;
 
                 using var atualizar = new MySqlCommand(@"
-            UPDATE Pedidos
-            SET Subtotal = @Subtotal,
-                Taxa = @Taxa,
-                TotalFinal = @TotalFinal
-            WHERE Id = @PedidoId", conn);
+                    UPDATE Pedidos
+                    SET Subtotal = @Subtotal,
+                        Taxa = @Taxa,
+                        TotalFinal = @TotalFinal
+                    WHERE Id = @PedidoId", conn);
 
                 atualizar.Parameters.AddWithValue("@Subtotal", subtotal);
                 atualizar.Parameters.AddWithValue("@Taxa", taxa);
@@ -366,7 +418,6 @@ namespace Restaurante.Controllers
 
             return RedirectToAction("Detalhes", new { mesaId });
         }
-
 
         // =====================
         // HISTÓRICO
@@ -408,6 +459,9 @@ namespace Restaurante.Controllers
             return View(pedidos);
         }
 
+        // =====================
+        // DASHBOARD
+        // =====================
         [AdminOnly]
         public IActionResult Dashboard(string periodo = "hoje")
         {
@@ -437,14 +491,15 @@ namespace Restaurante.Controllers
             conn.Open();
 
             string sql = @"
-        SELECT 
-            COUNT(*) AS TotalPedidos,
-            COALESCE(SUM(TotalFinal), 0) AS TotalVendas
-        FROM Pedidos
-        WHERE Status = 'Fechado'
-        AND DataFechamento BETWEEN @Inicio AND @Fim";
+                SELECT
+                    COUNT(*) AS TotalPedidos,
+                    COALESCE(SUM(TotalFinal), 0) AS TotalVendas
+                FROM Pedidos
+                WHERE Status = 'Fechado'
+                AND DataFechamento BETWEEN @Inicio AND @Fim";
 
             using var cmd = new MySqlCommand(sql, conn);
+
             cmd.Parameters.AddWithValue("@Inicio", inicio);
             cmd.Parameters.AddWithValue("@Fim", fim);
 
@@ -463,7 +518,9 @@ namespace Restaurante.Controllers
             return View();
         }
 
-        // Garçom e administrador podem fechar o pedido.
+        // =====================
+        // FECHAR PEDIDO
+        // =====================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult FecharPedido(int mesaId)
@@ -478,13 +535,14 @@ namespace Restaurante.Controllers
             decimal taxa = 0;
             decimal totalFinal = 0;
 
-            // 1. pegar pedido aberto
             using (var cmd = new MySqlCommand(@"
-        SELECT Id FROM Pedidos 
-        WHERE MesaId=@MesaId AND Status='Aberto'
-        LIMIT 1", conn))
+                SELECT Id
+                FROM Pedidos
+                WHERE MesaId=@MesaId AND Status='Aberto'
+                LIMIT 1", conn))
             {
                 cmd.Parameters.AddWithValue("@MesaId", mesaId);
+
                 var result = cmd.ExecuteScalar();
 
                 if (result != null)
@@ -494,30 +552,31 @@ namespace Restaurante.Controllers
             if (pedidoId == 0)
                 return RedirectToAction("Index");
 
-            // 2. calcular total
             using (var cmd = new MySqlCommand(@"
-        SELECT SUM(Quantidade * PrecoUnitario)
-        FROM ItensPedido
-        WHERE PedidoId=@PedidoId", conn))
+                SELECT SUM(Quantidade * PrecoUnitario)
+                FROM ItensPedido
+                WHERE PedidoId=@PedidoId", conn))
             {
                 cmd.Parameters.AddWithValue("@PedidoId", pedidoId);
 
                 var result = cmd.ExecuteScalar();
-                subtotal = result == DBNull.Value || result == null ? 0 : Convert.ToDecimal(result);
+
+                subtotal = result == DBNull.Value || result == null
+                    ? 0
+                    : Convert.ToDecimal(result);
             }
 
             taxa = Math.Round(subtotal * 0.10m, 2);
             totalFinal = subtotal + taxa;
 
-            // 3. fechar pedido
             using (var cmd = new MySqlCommand(@"
-        UPDATE Pedidos
-        SET Status='Fechado',
-            Subtotal=@Subtotal,
-            Taxa=@Taxa,
-            TotalFinal=@TotalFinal,
-            DataFechamento=NOW()
-        WHERE Id=@PedidoId", conn))
+                UPDATE Pedidos
+                SET Status='Fechado',
+                    Subtotal=@Subtotal,
+                    Taxa=@Taxa,
+                    TotalFinal=@TotalFinal,
+                    DataFechamento=NOW()
+                WHERE Id=@PedidoId", conn))
             {
                 cmd.Parameters.AddWithValue("@PedidoId", pedidoId);
                 cmd.Parameters.AddWithValue("@Subtotal", subtotal);
@@ -527,11 +586,10 @@ namespace Restaurante.Controllers
                 cmd.ExecuteNonQuery();
             }
 
-            // 4. liberar mesa
             using (var cmd = new MySqlCommand(@"
-        UPDATE Mesas 
-        SET Status='Livre'
-        WHERE Id=@MesaId", conn))
+                UPDATE Mesas
+                SET Status='Livre'
+                WHERE Id=@MesaId", conn))
             {
                 cmd.Parameters.AddWithValue("@MesaId", mesaId);
                 cmd.ExecuteNonQuery();
@@ -540,17 +598,24 @@ namespace Restaurante.Controllers
             return RedirectToAction("Index", "Mesa");
         }
 
+        // =====================
+        // PEGAR MESA PELO PEDIDO
+        // =====================
         private int GetMesaId(int pedidoId, MySqlConnection conn)
         {
             using var cmd = new MySqlCommand(@"
-        SELECT MesaId FROM Pedidos WHERE Id=@Id", conn);
+                SELECT MesaId
+                FROM Pedidos
+                WHERE Id=@Id", conn);
 
             cmd.Parameters.AddWithValue("@Id", pedidoId);
 
             return Convert.ToInt32(cmd.ExecuteScalar());
         }
 
-
+        // =====================
+        // IMPRIMIR COZINHA
+        // =====================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult ImprimirCozinha(int mesaId)
@@ -561,15 +626,34 @@ namespace Restaurante.Controllers
             conn.Open();
 
             int pedidoId = 0;
+            int numeroMesa = 0;
+
             var itens = new List<(int Id, int QuantidadePendente, string Nome)>();
+
+            // Pega o número REAL da mesa.
+            using (var cmd = new MySqlCommand(@"
+                SELECT Numero
+                FROM Mesas
+                WHERE Id=@MesaId
+                LIMIT 1", conn))
+            {
+                cmd.Parameters.AddWithValue("@MesaId", mesaId);
+
+                var result = cmd.ExecuteScalar();
+
+                if (result != null)
+                    numeroMesa = Convert.ToInt32(result);
+            }
 
             // Localiza o pedido aberto.
             using (var cmd = new MySqlCommand(@"
-                SELECT Id FROM Pedidos
+                SELECT Id
+                FROM Pedidos
                 WHERE MesaId=@MesaId AND Status='Aberto'
                 LIMIT 1", conn))
             {
                 cmd.Parameters.AddWithValue("@MesaId", mesaId);
+
                 var result = cmd.ExecuteScalar();
 
                 if (result != null)
@@ -579,11 +663,14 @@ namespace Restaurante.Controllers
             if (pedidoId == 0)
                 return Content("Nenhum pedido aberto");
 
-            // QuantidadeImpressa é a quantidade que já saiu para a cozinha.
-            // Ex.: quantidade=5 e impressa=3 => imprime somente 2.
+            // QuantidadeImpressa continua exatamente como estava.
             using (var cmd = new MySqlCommand(@"
-                SELECT ip.Id, p.Nome,
-                       GREATEST(ip.Quantidade - ip.QuantidadeImpressa, 0) AS QuantidadePendente
+                SELECT ip.Id,
+                       p.Nome,
+                       GREATEST(
+                           ip.Quantidade - ip.QuantidadeImpressa,
+                           0
+                       ) AS QuantidadePendente
                 FROM ItensPedido ip
                 INNER JOIN Produtos p ON p.Id = ip.ProdutoId
                 WHERE ip.PedidoId = @PedidoId
@@ -596,7 +683,8 @@ namespace Restaurante.Controllers
 
                 while (reader.Read())
                 {
-                    int quantidadePendente = Convert.ToInt32(reader["QuantidadePendente"]);
+                    int quantidadePendente =
+                        Convert.ToInt32(reader["QuantidadePendente"]);
 
                     if (quantidadePendente > 0)
                     {
@@ -611,28 +699,34 @@ namespace Restaurante.Controllers
 
             if (itens.Count == 0)
             {
-                TempData["SucessoImpressao"] = "Não há itens novos para imprimir.";
+                TempData["SucessoImpressao"] =
+                    "Não há itens novos para imprimir.";
+
                 return RedirectToAction("Detalhes", new { mesaId });
             }
 
             string ticket =
                 $@"
 ========================
-COZINHA - MESA {mesaId}
+COZINHA - MESA {numeroMesa}
 ========================
 PEDIDO #{pedidoId}
 ------------------------
-{string.Join("\n", itens.Select(i => $"{i.QuantidadePendente}x {i.Nome}"))}
+{string.Join("\n", itens.Select(i =>
+    $"{i.QuantidadePendente}x {i.Nome}"))}
 ------------------------
 ";
 
-            // Só atualizamos QuantidadeImpressa se o envio para a impressora
-            // for aceito. Assim uma falha de impressão pode ser tentada novamente.
-            bool impresso = ImpressoraService.ImprimirCozinha(_configuration, ticket);
+            bool impresso =
+                ImpressoraService.ImprimirCozinha(
+                    _configuration,
+                    ticket);
 
             if (!impresso)
             {
-                TempData["ErroImpressao"] = "Não foi possível imprimir. Verifique a impressora e a configuração.";
+                TempData["ErroImpressao"] =
+                    "Não foi possível imprimir. Verifique a impressora e a configuração.";
+
                 return RedirectToAction("Detalhes", new { mesaId });
             }
 
@@ -644,16 +738,39 @@ PEDIDO #{pedidoId}
                     {
                         using var cmd = new MySqlCommand(@"
                             UPDATE ItensPedido
-                            SET QuantidadeImpressa = LEAST(Quantidade, QuantidadeImpressa + @QuantidadeImpressa),
-                                Impresso = CASE
-                                    WHEN LEAST(Quantidade, QuantidadeImpressa + @QuantidadeImpressa) >= Quantidade THEN 1
-                                    ELSE 0
-                                END
-                            WHERE Id=@Id AND PedidoId=@PedidoId", conn, transaction);
+                            SET QuantidadeImpressa =
+                                    LEAST(
+                                        Quantidade,
+                                        QuantidadeImpressa
+                                        + @QuantidadeImpressa
+                                    ),
+                                Impresso =
+                                    CASE
+                                        WHEN LEAST(
+                                            Quantidade,
+                                            QuantidadeImpressa
+                                            + @QuantidadeImpressa
+                                        ) >= Quantidade
+                                        THEN 1
+                                        ELSE 0
+                                    END
+                            WHERE Id=@Id
+                              AND PedidoId=@PedidoId",
+                            conn,
+                            transaction);
 
-                        cmd.Parameters.AddWithValue("@QuantidadeImpressa", item.QuantidadePendente);
-                        cmd.Parameters.AddWithValue("@Id", item.Id);
-                        cmd.Parameters.AddWithValue("@PedidoId", pedidoId);
+                        cmd.Parameters.AddWithValue(
+                            "@QuantidadeImpressa",
+                            item.QuantidadePendente);
+
+                        cmd.Parameters.AddWithValue(
+                            "@Id",
+                            item.Id);
+
+                        cmd.Parameters.AddWithValue(
+                            "@PedidoId",
+                            pedidoId);
+
                         cmd.ExecuteNonQuery();
                     }
 
@@ -666,9 +783,10 @@ PEDIDO #{pedidoId}
                 }
             }
 
-            TempData["SucessoImpressao"] = "Itens novos enviados para a cozinha.";
+            TempData["SucessoImpressao"] =
+                "Itens novos enviados para a cozinha.";
+
             return RedirectToAction("Detalhes", new { mesaId });
         }
-
     }
 }

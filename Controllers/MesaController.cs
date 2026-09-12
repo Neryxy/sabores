@@ -63,8 +63,8 @@ namespace Restaurante.Controllers
             conn.Open();
 
             string sqlGetPedidos = @"
-                SELECT Id 
-                FROM Pedidos 
+                SELECT Id
+                FROM Pedidos
                 WHERE MesaId = @MesaId AND Status = 'Aberto'";
 
             List<int> pedidos = new();
@@ -122,6 +122,7 @@ namespace Restaurante.Controllers
         // =========================
         [HttpPost]
         [AdminOnly]
+        [ValidateAntiForgeryToken]
         public IActionResult Create(Mesa mesa)
         {
             string conexao = _configuration.GetConnectionString("DefaultConnection")!;
@@ -134,21 +135,35 @@ namespace Restaurante.Controllers
                 : mesa.Local;
 
             // =========================
-            // DESCOBRIR PRÓXIMO NÚMERO
+            // ENCONTRAR MENOR NÚMERO LIVRE
             // =========================
-            string sqlNumero = @"
-                SELECT COALESCE(MAX(Numero), 0) + 1
+            int proximoNumero = 1;
+
+            string sqlNumeros = @"
+                SELECT Numero
                 FROM Mesas
-                WHERE Local = @Local";
+                WHERE Local = @Local
+                ORDER BY Numero ASC";
 
-            int proximoNumero;
-
-            using (var cmdNumero = new MySqlCommand(sqlNumero, conn))
+            using (var cmdNumeros = new MySqlCommand(sqlNumeros, conn))
             {
-                cmdNumero.Parameters.AddWithValue("@Local", local);
+                cmdNumeros.Parameters.AddWithValue("@Local", local);
 
-                proximoNumero = Convert.ToInt32(
-                    cmdNumero.ExecuteScalar());
+                using var reader = cmdNumeros.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    int numeroExistente = Convert.ToInt32(reader["Numero"]);
+
+                    if (numeroExistente == proximoNumero)
+                    {
+                        proximoNumero++;
+                    }
+                    else if (numeroExistente > proximoNumero)
+                    {
+                        break;
+                    }
+                }
             }
 
             // =========================
@@ -219,6 +234,7 @@ namespace Restaurante.Controllers
         // =========================
         [HttpPost]
         [AdminOnly]
+        [ValidateAntiForgeryToken]
         public IActionResult Edit(Mesa mesa)
         {
             string conexao = _configuration.GetConnectionString("DefaultConnection")!;
@@ -262,7 +278,10 @@ namespace Restaurante.Controllers
             using var conn = new MySqlConnection(conexao);
             conn.Open();
 
-            string checkSql = "SELECT Status FROM Mesas WHERE Id = @Id";
+            string checkSql = @"
+        SELECT Status
+        FROM Mesas
+        WHERE Id = @Id";
 
             string status = "";
 
@@ -276,19 +295,23 @@ namespace Restaurante.Controllers
                     status = result.ToString()!;
             }
 
+            // Não permite excluir mesa ocupada.
             if (status == "Ocupada")
             {
                 TempData["Erro"] = "Não é possível excluir uma mesa ocupada!";
                 return RedirectToAction("Index");
             }
 
-            using var cmd = new MySqlCommand(
-                "DELETE FROM Mesas WHERE Id = @Id",
-                conn);
+            // Exclui a mesa.
+            using (var cmd = new MySqlCommand(@"
+        DELETE FROM Mesas
+        WHERE Id = @Id", conn))
+            {
+                cmd.Parameters.AddWithValue("@Id", id);
+                cmd.ExecuteNonQuery();
+            }
 
-            cmd.Parameters.AddWithValue("@Id", id);
-
-            cmd.ExecuteNonQuery();
+            TempData["Sucesso"] = "Mesa excluída com sucesso!";
 
             return RedirectToAction("Index");
         }
@@ -296,6 +319,9 @@ namespace Restaurante.Controllers
         // =========================
         // RESERVAR MESA
         // =========================
+        [HttpPost]
+        [AdminOnly]
+        [ValidateAntiForgeryToken]
         public IActionResult Reservar(int id)
         {
             string conexao = _configuration.GetConnectionString("DefaultConnection")!;
