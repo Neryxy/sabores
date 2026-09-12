@@ -15,11 +15,16 @@
               method="post">
 
             @Html.AntiForgeryToken()
-            <input type="hidden" name="mesaId" value="@ViewBag.MesaId" />
 
-            <button type="submit" class="btn btn-dark">
+            <input type="hidden"
+                   name="mesaId"
+                   value="@ViewBag.MesaId" />
+
+            <button type="submit"
+                    class="btn btn-dark">
                 🖨️ Imprimir Cozinha
             </button>
+
         </form>
 
     </div>
@@ -28,12 +33,16 @@
 
     @if (TempData["ErroImpressao"] != null)
     {
-        <div class="alert alert-danger">@TempData["ErroImpressao"]</div>
+        <div class="alert alert-danger">
+            @TempData["ErroImpressao"]
+        </div>
     }
 
     @if (TempData["SucessoImpressao"] != null)
     {
-        <div class="alert alert-success">@TempData["SucessoImpressao"]</div>
+        <div class="alert alert-success">
+            @TempData["SucessoImpressao"]
+        </div>
     }
 
     <hr />
@@ -46,7 +55,10 @@
     }
     else
     {
+        <h4>Produtos</h4>
+
         <table class="table table-hover">
+
             <thead>
                 <tr>
                     <th>Nome</th>
@@ -56,45 +68,69 @@
             </thead>
 
             <tbody>
+
                 @foreach (var p in Model)
                 {
                     <tr>
-                        <td>@p.Nome</td>
-                        <td>R$ @p.Preco.ToString("N2")</td>
+
+                        <td>
+                            @p.Nome
+                        </td>
+
+                        <td>
+                            R$ @p.Preco.ToString("N2")
+                        </td>
+
                         <td>
 
                             <form asp-action="AdicionarItem"
-                                  asp-controller="Pedido"
-                                  method="post"
-                                  class="d-flex gap-2">
+                            asp-controller="Pedido"
+                            method="post"
+                            class="d-flex gap-2">
 
-                                <input type="hidden" name="mesaId" value="@ViewBag.MesaId" />
-                                <input type="hidden" name="pedidoId" value="@ViewBag.PedidoId" />
-                                <input type="hidden" name="produtoId" value="@p.Id" />
+                                <input type="hidden"
+                                name="mesaId"
+                                value="@ViewBag.MesaId" />
+
+                                <input type="hidden"
+                                name="pedidoId"
+                                value="@ViewBag.PedidoId" />
+
+                                <input type="hidden"
+                                name="produtoId"
+                                value="@p.Id" />
 
                                 <input type="number"
-                                       name="quantidade"
-                                       value="1"
-                                       min="1"
-                                       class="form-control form-control-sm" />
+                                name="quantidade"
+                                value="1"
+                                min="1"
+                                class="form-control form-control-sm"
+                                style="width: 80px;" />
 
-                                <button class="btn btn-success btn-sm">+</button>
+                                <button type="submit"
+                                class="btn btn-success btn-sm">
+                                    +
+                                </button>
 
                             </form>
 
                         </td>
+
                     </tr>
                 }
+
             </tbody>
+
         </table>
 
         <hr />
 
         <h4>Itens do Pedido</h4>
 
-        
-            var itens = ViewBag.Itens as List<Restaurante.Models.ItemPedido>;
-        
+    }
+    @{
+        var itens = ViewBag.Itens as List<Restaurante.Models.ItemPedido>;
+        }
 
         @if (itens != null && itens.Count > 0)
         {
@@ -105,50 +141,114 @@
                 @foreach (var item in itens)
                 {
                     var subtotal = item.Quantidade * item.PrecoUnitario;
+
                     total += subtotal;
 
-                    <li class="list-group-item d-flex justify-content-between">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
 
                         <div>
-                            <strong>@item.Nome</strong><br />
-                            <small>@item.Quantidade x R$ @item.PrecoUnitario.ToString("N2")</small>
+
+                            <strong>
+                                @item.Nome
+                            </strong>
+
+                            <br />
+
+                            <small>
+                                @item.Quantidade x
+                                R$ @item.PrecoUnitario.ToString("N2")
+                            </small>
+
                         </div>
 
-                        <div>
-                            <strong>R$ @subtotal.ToString("N2")</strong>
+                        <div class="d-flex align-items-center gap-2">
+
+                            <form asp-action="DiminuirItem"
+                                  asp-controller="Pedido"
+                                  method="post">
+
+                                @Html.AntiForgeryToken()
+
+                                <input type="hidden"
+                                       name="itemId"
+                                       value="@item.Id" />
+
+                                <input type="hidden"
+                                       name="mesaId"
+                                       value="@ViewBag.MesaId" />
+
+                                <button type="submit"
+                                        class="btn btn-outline-danger btn-sm">
+                                    −
+                                </button>
+
+                            </form>
+
+                            <strong>
+                                R$ @subtotal.ToString("N2")
+                            </strong>
+
                         </div>
 
                     </li>
                 }
 
                 <li class="list-group-item d-flex justify-content-between">
-                    <strong>Subtotal</strong>
-                    <strong>R$ @total.ToString("N2")</strong>
+
+                    <strong>
+                        Subtotal
+                    </strong>
+
+                    <strong>
+                        R$ @total.ToString("N2")
+                    </strong>
+
                 </li>
 
-                @{ decimal taxa = Math.Round(total * 0.10m, 2); }
+                @{
+                    decimal taxa = Math.Round(total * 0.10m, 2);
+                    decimal totalFinal = total + taxa;
+                }
+
                 <li class="list-group-item d-flex justify-content-between">
-                    <strong>Taxa (10%)</strong>
-                    <strong>R$ @taxa.ToString("N2")</strong>
+
+                    <strong>
+                        Taxa (10%)
+                    </strong>
+
+                    <strong>
+                        R$ @taxa.ToString("N2")
+                    </strong>
+
                 </li>
 
                 <li class="list-group-item d-flex justify-content-between bg-light">
-                    <strong>Total Final</strong>
-                    <strong>R$ @((total + taxa).ToString("N2"))</strong>
+
+                    <strong>
+                        Total Final
+                    </strong>
+
+                    <strong>
+                        R$ @totalFinal.ToString("N2")
+                    </strong>
+
                 </li>
 
             </ul>
 
-            @* Garçom também pode fechar o pedido nesta tela. *@
             <form asp-action="FecharPedido"
                   asp-controller="Pedido"
                   method="post"
                   class="mt-3">
 
                 @Html.AntiForgeryToken()
-                <input type="hidden" name="mesaId" value="@ViewBag.MesaId" />
 
-                <button type="submit" class="btn btn-danger w-100">
+                <input type="hidden"
+                       name="mesaId"
+                       value="@ViewBag.MesaId" />
+
+                <button type="submit"
+                        class="btn btn-danger w-100">
                     Fechar Pedido
                 </button>
 
@@ -160,6 +260,5 @@
                 Nenhum item adicionado ainda.
             </div>
         }
-    }
 
 </div>

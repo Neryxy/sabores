@@ -274,6 +274,101 @@ namespace Restaurante.Controllers
         }
 
         // =====================
+        // DIMINUIR ITEM
+        // =====================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult DiminuirItem(int itemId, int mesaId)
+        {
+            string conexao = _configuration.GetConnectionString("DefaultConnection")!;
+
+            using var conn = new MySqlConnection(conexao);
+            conn.Open();
+
+            int pedidoId = 0;
+            int quantidadeAtual = 0;
+
+            // Busca o item e confirma que pertence a um pedido aberto da mesa.
+            using (var cmd = new MySqlCommand(@"
+        SELECT ip.PedidoId, ip.Quantidade
+        FROM ItensPedido ip
+        INNER JOIN Pedidos p ON p.Id = ip.PedidoId
+        WHERE ip.Id = @ItemId
+          AND p.MesaId = @MesaId
+          AND p.Status = 'Aberto'
+        LIMIT 1", conn))
+            {
+                cmd.Parameters.AddWithValue("@ItemId", itemId);
+                cmd.Parameters.AddWithValue("@MesaId", mesaId);
+
+                using var reader = cmd.ExecuteReader();
+
+                if (reader.Read())
+                {
+                    pedidoId = Convert.ToInt32(reader["PedidoId"]);
+                    quantidadeAtual = Convert.ToInt32(reader["Quantidade"]);
+                }
+            }
+
+            if (pedidoId == 0)
+                return RedirectToAction("Detalhes", new { mesaId });
+
+            // Diminui somente a quantidade do pedido.
+            if (quantidadeAtual > 1)
+            {
+                using var cmd = new MySqlCommand(@"
+            UPDATE ItensPedido
+            SET Quantidade = Quantidade - 1
+            WHERE Id = @ItemId", conn);
+
+                cmd.Parameters.AddWithValue("@ItemId", itemId);
+
+                cmd.ExecuteNonQuery();
+            }
+            else
+            {
+                // Se tinha apenas 1 unidade, remove o item.
+                using var cmd = new MySqlCommand(@"
+            DELETE FROM ItensPedido
+            WHERE Id = @ItemId", conn);
+
+                cmd.Parameters.AddWithValue("@ItemId", itemId);
+
+                cmd.ExecuteNonQuery();
+            }
+
+            // Recalcula subtotal, taxa e total final.
+            using (var cmd = new MySqlCommand(@"
+        SELECT COALESCE(SUM(Quantidade * PrecoUnitario), 0)
+        FROM ItensPedido
+        WHERE PedidoId = @PedidoId", conn))
+            {
+                cmd.Parameters.AddWithValue("@PedidoId", pedidoId);
+
+                decimal subtotal = Convert.ToDecimal(cmd.ExecuteScalar());
+                decimal taxa = Math.Round(subtotal * 0.10m, 2);
+                decimal totalFinal = subtotal + taxa;
+
+                using var atualizar = new MySqlCommand(@"
+            UPDATE Pedidos
+            SET Subtotal = @Subtotal,
+                Taxa = @Taxa,
+                TotalFinal = @TotalFinal
+            WHERE Id = @PedidoId", conn);
+
+                atualizar.Parameters.AddWithValue("@Subtotal", subtotal);
+                atualizar.Parameters.AddWithValue("@Taxa", taxa);
+                atualizar.Parameters.AddWithValue("@TotalFinal", totalFinal);
+                atualizar.Parameters.AddWithValue("@PedidoId", pedidoId);
+
+                atualizar.ExecuteNonQuery();
+            }
+
+            return RedirectToAction("Detalhes", new { mesaId });
+        }
+
+
+        // =====================
         // HISTÓRICO
         // =====================
         [AdminOnly]
